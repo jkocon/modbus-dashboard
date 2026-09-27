@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modbus RTU Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1 data-i18n="appTitle">Modbus RTU Dashboard</h1>
+      <p class="subtitle" data-i18n="subtitle">Scanning, reading, and configuring Modbus RTU devices &mdash; COM/RS485 and network</p>
+    </div>
+  </div>
+
+  <div class="header-controls">
+    <select id="langSelect" class="lang-select" aria-label="Language">
+      <option value="en">English</option>
+      <option value="pl">Polski</option>
+    </select>
+    <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<section id="connectionPanel" class="panel">
+  <div class="row">
+    <label class="radio"><input type="radio" name="transport" value="serial" checked> <span data-i18n="transportSerial">Serial port</span></label>
+    <label class="radio"><input type="radio" name="transport" value="tcp"> <span data-i18n="transportNetwork">Network (IP)</span></label>
+  </div>
+
+  <div class="row" id="serialRow">
+    <label><span data-i18n="comPortLabel">COM port:</span>
+      <select id="comPort"></select>
+    </label>
+    <button id="btnRefreshPorts" type="button" data-i18n="btnRefreshPorts">Refresh ports</button>
+  </div>
+
+  <div class="row" id="serialParamsRow">
+    <label><span data-i18n="dataBitsLabel">Data bits:</span> <select id="dataBits"><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label>
+    <label><span data-i18n="parityLabel">Parity:</span>
+      <select id="parity">
+        <option selected>None</option><option>Even</option><option>Odd</option><option>Mark</option><option>Space</option>
+      </select>
+    </label>
+    <label><span data-i18n="stopBitsLabel">Stop bits:</span>
+      <select id="stopBits">
+        <option value="One" selected>1</option><option value="OnePointFive">1.5</option><option value="Two">2</option>
+      </select>
+    </label>
+    <label><span data-i18n="flowControlLabel">Flow control:</span>
+      <select id="flowControl">
+        <option selected>None</option><option>RtsCts</option><option>DsrDtr</option><option>XonXoff</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="row hidden" id="tcpRow">
+    <label><span data-i18n="ipAddressLabel">IP address:</span> <input type="text" id="ipAddress" data-i18n-placeholder="ipAddressPlaceholder" placeholder="e.g. 192.168.1.50"></label>
+    <label><span data-i18n="tcpPortLabel">TCP port:</span> <input type="number" id="tcpPort" value="502" min="1" max="65535"></label>
+    <span class="hint" data-i18n="tcpHint">e.g. Elfin EW11 / USR-TCP232 in transparent mode (port is often 502/8899/4196/23)</span>
+  </div>
+
+  <div class="row hidden" id="mbapRow">
+    <label class="checkbox">
+      <input type="checkbox" id="mbap">
+      <span data-i18n="mbapLabel">Real Modbus TCP (MBAP, no CRC) instead of RTU tunneled over TCP &mdash; try this if scanning finds nothing (typically port 502)</span>
+    </label>
+  </div>
+</section>
+
+<nav class="tabs">
+  <button class="tab-btn" data-tab="discover" data-i18n="tabDiscover">Discover on network</button>
+  <button class="tab-btn active" data-tab="scan" data-i18n="tabScan">Scan</button>
+  <button class="tab-btn" data-tab="temp" data-i18n="tabTemp">Temperature (R4DCB08)</button>
+  <button class="tab-btn" data-tab="coils" data-i18n="tabCoils">Coils (relays)</button>
+  <button class="tab-btn" data-tab="addr" data-i18n="tabAddr">Change address</button>
+  <button class="tab-btn" data-tab="baud" data-i18n="tabBaud">Change baud rate</button>
+</nav>
+
+<!-- ===================== Discover on network ===================== -->
+<section class="tab-page" id="tab-discover">
+  <div class="panel fields">
+    <label><span data-i18n="discoverSubnetLabel">Subnet (CIDR):</span> <input type="text" id="discoverSubnet" data-i18n-placeholder="discoverSubnetPlaceholder" placeholder="e.g. 192.168.1.0/24" style="width:11em"></label>
+    <label><span data-i18n="discoverPortsLabel">Ports to scan:</span> <input type="text" id="discoverPorts" value="502, 8899, 4196, 23" style="width:12em"></label>
+    <label><span data-i18n="discoverTimeoutLabel">Timeout (ms):</span> <input type="number" id="discoverTimeout" value="200" min="50" max="2000"></label>
+    <label class="checkbox"><input type="checkbox" id="discoverHf" checked> <span data-i18n="discoverHfLabel">HF/Elfin broadcast (port 48899)</span></label>
+  </div>
+  <p class="hint" style="margin: -6px 0 14px;" data-i18n="discoverHint">
+    Two independent methods at once: a verified UDP broadcast for Hi-Flying/Elfin modules (identifies IP, MAC, and model)
+    and a TCP port scan across the whole subnet (finds any converter with one of the given ports open, regardless of brand &mdash;
+    the only way to detect devices with a closed protocol, e.g. USR-IOT/VirCOM).
+  </p>
+
+  <div class="btnrow">
+    <button type="button" id="btnDiscover" class="primary" data-i18n="btnDiscover">Search</button>
+    <button type="button" id="btnCancelDiscover" disabled data-i18n="btnCancelDiscover">Cancel</button>
+  </div>
+
+  <div class="progress"><div id="discoverProgressBar"></div></div>
+  <div id="discoverStatus" class="status" data-i18n-dynamic="ready">Ready.</div>
+
+  <table class="results">
+    <thead><tr><th data-i18n="discoverTableIp">IP address</th><th data-i18n="discoverTableMethod">Method</th><th data-i18n="discoverTableDetails">Details</th><th></th></tr></thead>
+    <tbody id="discoverResults"></tbody>
+  </table>
+</section>
+
+<!-- ===================== Scan ===================== -->
+<section class="tab-page active" id="tab-scan">
+  <div class="panel grid">
+    <div id="scanBaudBox">
+      <label data-i18n="scanBaudLabel">Baud rate (COM only):</label>
+      <div id="baudList" class="checklist"></div>
+      <div class="btnrow">
+        <button type="button" id="btnPresetR4" data-i18n="btnPresetR4">R4DCB08 only</button>
+        <button type="button" id="btnPresetAll" data-i18n="btnPresetAll">Select all</button>
+      </div>
+    </div>
+
+    <div class="fields">
+      <label><span data-i18n="startAddrLabel">Start address:</span> <input type="number" id="startAddr" value="1" min="0" max="255"></label>
+      <label><span data-i18n="endAddrLabel">End address:</span> <input type="number" id="endAddr" value="20" min="0" max="255"></label>
+      <label><span data-i18n="funcCodeLabel">Modbus function:</span>
+        <select id="funcCode">
+          <option value="1">0x01 - Read Coils</option>
+          <option value="3" selected>0x03 - Read Holding Registers</option>
+          <option value="4">0x04 - Read Input Registers</option>
+        </select>
+      </label>
+      <label><span data-i18n="registerLabel">Start register:</span> <input type="number" id="register" value="0" min="0" max="65535"></label>
+      <label><span data-i18n="quantityLabel">Quantity:</span> <input type="number" id="quantity" value="8" min="1" max="125"></label>
+      <label><span data-i18n="timeoutMsLabel">Timeout (ms):</span> <input type="number" id="timeoutMs" value="150" min="50" max="5000"></label>
+      <label class="checkbox"><input type="checkbox" id="discoverAddress"> <span data-i18n="discoverAddressLabel">DiscoverAddress mode (broadcast, register 0x4000 &mdash; some Waveshare devices)</span></label>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" id="btnScan" class="primary" data-i18n="btnScan">Scan</button>
+      <button type="button" id="btnCancelScan" disabled data-i18n="btnCancelScan">Cancel</button>
+    </div>
+  </div>
+
+  <div class="progress"><div id="scanProgressBar"></div></div>
+  <div id="scanStatus" class="status" data-i18n-dynamic="ready">Ready.</div>
+
+  <table class="results">
+    <thead><tr><th data-i18n="scanTableBaud">Baud rate</th><th data-i18n="scanTableAddr">Address</th><th data-i18n="scanTableResp">Response (hex)</th></tr></thead>
+    <tbody id="scanResults"></tbody>
+  </table>
+</section>
+
+<!-- ===================== Temperature ===================== -->
+<section class="tab-page" id="tab-temp">
+  <div class="panel row">
+    <label id="tempBaudRow"><span data-i18n="tempBaudLabel">Baud rate:</span>
+      <select id="tempBaud">
+        <option>1200</option><option>2400</option><option>4800</option>
+        <option selected>9600</option><option>19200</option>
+      </select>
+    </label>
+    <label><span data-i18n="tempAddrLabel">Address:</span> <input type="number" id="tempAddr" value="1" min="1" max="247"></label>
+    <button type="button" id="btnReadOnce" class="primary" data-i18n="btnReadOnce">Read once</button>
+    <label class="checkbox"><input type="checkbox" id="tempLoop"> <span data-i18n="tempLoopLabel">Continuous mode, every (s):</span></label>
+    <input type="number" id="tempInterval" value="2" min="1" max="3600" style="width:4em">
+  </div>
+
+  <table class="results">
+    <thead><tr><th data-i18n="tempTableCh">Channel</th><th data-i18n="tempTableTemp">Temperature &deg;C</th><th data-i18n="tempTableStatus">Status</th></tr></thead>
+    <tbody id="tempResults"></tbody>
+  </table>
+  <div id="tempStatus" class="status" data-i18n-dynamic="ready">Ready.</div>
+</section>
+
+<!-- ===================== Coils (relays) ===================== -->
+<section class="tab-page" id="tab-coils">
+  <div class="panel row">
+    <label id="coilsBaudRow"><span data-i18n="coilsBaudLabel">Baud rate:</span>
+      <select id="coilsBaud">
+        <option>1200</option><option>2400</option><option>4800</option>
+        <option selected>9600</option><option>19200</option><option>38400</option><option>115200</option>
+      </select>
+    </label>
+    <label><span data-i18n="tempAddrLabel">Address:</span> <input type="number" id="coilsAddr" value="1" min="1" max="247"></label>
+    <label><span data-i18n="coilsStartLabel">Start coil:</span> <input type="number" id="coilsStart" value="0" min="0" max="65535"></label>
+    <label><span data-i18n="coilsCountLabel">Number of coils:</span> <input type="number" id="coilsCount" value="8" min="1" max="64"></label>
+    <button type="button" id="btnReadCoils" class="primary" data-i18n="btnReadCoils">Read states</button>
+    <button type="button" id="btnAllOn" class="ok-btn" data-i18n="btnAllOn">All ON</button>
+    <button type="button" id="btnAllOff" data-i18n="btnAllOff">All OFF</button>
+  </div>
+  <p class="hint" style="margin: -6px 0 14px;" data-i18n="coilsHint">
+    Click a coil to toggle it (Write Single Coil, 0x05). "All ON" / "All OFF" write every coil in the range at once
+    (Write Multiple Coils, 0x0F). States are re-read from the device after each write. Waveshare relay boards use
+    coils 0..7 / 0..15 / 0..31.
+  </p>
+
+  <div id="coilGrid" class="coil-grid"></div>
+  <div id="coilsStatus" class="status" data-i18n-dynamic="ready">Ready.</div>
+  <pre id="coilsLog" class="log log-short"></pre>
+</section>
+
+<!-- ===================== Change address ===================== -->
+<section class="tab-page" id="tab-addr">
+  <div class="panel fields">
+    <label id="addrBaudRow"><span data-i18n="addrBaudLabel">Current baud rate:</span>
+      <select id="addrBaud">
+        <option>1200</option><option>2400</option><option>4800</option>
+        <option selected>9600</option><option>19200</option>
+      </select>
+    </label>
+    <label><span data-i18n="oldAddrLabel">Current address:</span> <input type="number" id="oldAddr" value="1" min="0" max="247"></label>
+    <label><span data-i18n="newAddrLabel">New address:</span> <input type="number" id="newAddr" value="1" min="1" max="247"></label>
+    <button type="button" id="btnSetAddr" class="primary" data-i18n="btnSetAddr">Change address</button>
+  </div>
+  <p class="warn" data-i18n="addrWarn">Warning: with an address collision (two devices sharing the same address), the change will affect BOTH at once.</p>
+  <pre id="addrLog" class="log"></pre>
+</section>
+
+<!-- ===================== Change baud rate ===================== -->
+<section class="tab-page" id="tab-baud">
+  <div class="panel fields">
+    <label id="baudCurBaudRow"><span data-i18n="baudCurLabel">Current baud rate:</span>
+      <select id="baudCurBaud">
+        <option>1200</option><option>2400</option><option>4800</option>
+        <option selected>9600</option><option>19200</option>
+      </select>
+    </label>
+    <label><span data-i18n="baudAddrLabel">Device address:</span> <input type="number" id="baudAddr" value="1" min="1" max="247"></label>
+    <label><span data-i18n="newBaudLabel">New baud rate:</span>
+      <select id="newBaudRate">
+        <option>1200</option><option>2400</option><option>4800</option>
+        <option selected>9600</option><option>19200</option>
+      </select>
+    </label>
+    <button type="button" id="btnSetBaud" class="primary" data-i18n="btnSetBaud">Change baud rate</button>
+  </div>
+  <p class="warn" data-i18n="baudWarn">After the change, the device may need a power cycle to respond on the new baud rate.</p>
+  <pre id="baudLog" class="log"></pre>
+</section>
+
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

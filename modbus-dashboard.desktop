@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Modbus Dashboard
+Name[pl]=Modbus Dashboard
+Comment=Modbus RTU / TCP dashboard (RS485 and network devices)
+Comment[pl]=Panel Modbus RTU/TCP (urządzenia RS485 i sieciowe)
+Exec="/opt/modbus-dashboard/.venv/bin/python3" "/opt/modbus-dashboard/modbus_app.py"
+Path=/opt/modbus-dashboard
+Icon=network-wired
+Terminal=false
+Categories=Utility;
+Keywords=modbus;rtu;rs485;dashboard;plc;
+StartupNotify=true

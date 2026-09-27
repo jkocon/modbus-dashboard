@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# PyInstaller build output (binaries go to GitHub Releases, not the repo)
+webapp/build/
+webapp/dist/
+webapp/*.spec
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
