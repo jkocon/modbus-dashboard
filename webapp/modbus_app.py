@@ -17,6 +17,7 @@ see build.py in this folder.
 from __future__ import annotations
 
 import socket
+import sys
 import threading
 from http.server import ThreadingHTTPServer
 
@@ -34,7 +35,20 @@ def _find_free_port(host: str) -> int:
         return s.getsockname()[1]
 
 
+def _set_linux_app_id() -> None:
+    """On Wayland the taskbar matches windows to modbus-dashboard.desktop (and its icon) by app_id,
+    which GTK takes from the program name - by default the script's file name."""
+    if not sys.platform.startswith("linux"):
+        return
+    try:
+        from gi.repository import GLib
+        GLib.set_prgname("modbus-dashboard")
+    except Exception:
+        pass
+
+
 def main() -> None:
+    _set_linux_app_id()
     port = _find_free_port(HOST)
     server = ThreadingHTTPServer((HOST, port), Handler)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)

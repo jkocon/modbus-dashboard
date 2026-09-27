@@ -18,3 +18,5 @@ rsync -a --delete --exclude .venv --exclude __pycache__ --exclude dist --exclude
 "$DEST/.venv/bin/pip" install --quiet --upgrade pywebview pyserial
 
 install -Dm644 "$SRC/modbus-dashboard.desktop" /usr/local/share/applications/modbus-dashboard.desktop
+install -Dm644 "$SRC/modbus-dashboard.svg" /usr/local/share/icons/hicolor/scalable/apps/modbus-dashboard.svg
+gtk-update-icon-cache -qtf /usr/local/share/icons/hicolor 2>/dev/null || true

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+ <!-- Ikona Modbus Dashboard: moduł RS485 na szynę DIN z parą przewodów A/B i przebiegiem danych.
+      Styl jak gpu-tray; poświata z półprzezroczystych obrysów, bo renderer SVG w Qt/KDE nie obsługuje filtrów. -->
+ <defs>
+  <radialGradient id="bgGlow" cx="0.5" cy="0.6" r="0.7">
+   <stop offset="0" stop-color="#3a1747"/>
+   <stop offset="0.55" stop-color="#150d24"/>
+   <stop offset="1" stop-color="#07070d"/>
+  </radialGradient>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0" stop-color="#2a3563"/>
+   <stop offset="1" stop-color="#141a33"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0" stop-color="#d9deea"/>
+   <stop offset="1" stop-color="#7d8598"/>
+  </linearGradient>
+ </defs>
+
+ <rect x="2" y="2" width="124" height="124" rx="24" fill="url(#bgGlow)"/>
+
+ <!-- przewody A/B wchodzące od góry -->
+ <path d="M48,4 V30" stroke="#ffb020" stroke-width="6" stroke-linecap="round" fill="none"/>
+ <path d="M64,4 V30" stroke="#4da3ff" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+ <!-- szyna DIN -->
+ <rect x="8" y="104" width="112" height="8" rx="2" fill="url(#metal)"/>
+
+ <!-- poświata obudowy -->
+ <rect x="22" y="32" width="84" height="74" rx="8" fill="none" stroke="#b86bff" stroke-opacity="0.18" stroke-width="14"/>
+ <rect x="22" y="32" width="84" height="74" rx="8" fill="none" stroke="#9fb4ff" stroke-opacity="0.35" stroke-width="7"/>
+ <!-- obudowa modułu -->
+ <rect x="22" y="32" width="84" height="74" rx="8" fill="url(#body)" stroke="#e3e9ff" stroke-width="2.5"/>
+
+ <!-- listwa zacisków śrubowych -->
+ <g stroke="#e3e9ff" stroke-width="1.5">
+  <circle cx="48" cy="42" r="5" fill="#141a33"/>
+  <circle cx="64" cy="42" r="5" fill="#141a33"/>
+  <circle cx="80" cy="42" r="5" fill="#141a33"/>
+  <line x1="45" y1="45" x2="51" y2="39"/>
+  <line x1="61" y1="45" x2="67" y2="39"/>
+  <line x1="77" y1="45" x2="83" y2="39"/>
+ </g>
+
+ <!-- przebieg danych na magistrali -->
+ <path d="M32,80 H40 V64 H50 V80 H56 V64 H72 V80 H80 V64 H88 V80 H96" fill="none" stroke="#2de2c6"
+       stroke-opacity="0.3" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+ <path d="M32,80 H40 V64 H50 V80 H56 V64 H72 V80 H80 V64 H88 V80 H96" fill="none" stroke="#2de2c6"
+       stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+ <!-- diody TX / RX -->
+ <circle cx="88" cy="94" r="5" fill="#ff2d55" fill-opacity="0.3"/>
+ <circle cx="88" cy="94" r="2.5" fill="#ff2d55"/>
+ <circle cx="98" cy="94" r="5" fill="#39ff88" fill-opacity="0.3"/>
+ <circle cx="98" cy="94" r="2.5" fill="#39ff88"/>
+</svg>
