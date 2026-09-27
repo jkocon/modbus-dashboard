@@ -77,7 +77,7 @@ function applyTheme(theme) {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem("theme");
+  const saved = storageGet("theme");
   applyTheme(saved);
 }
 
@@ -85,7 +85,7 @@ function toggleTheme() {
   const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const current = document.documentElement.getAttribute("data-theme") || (isDark ? "dark" : "light");
   const next = current === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", next);
+  storageSet("theme", next);
   applyTheme(next);
 }
 

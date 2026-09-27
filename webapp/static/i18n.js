@@ -258,7 +258,17 @@ const TRANSLATIONS = {
   },
 };
 
-let currentLang = localStorage.getItem("lang") || "en";
+// localStorage can be missing or throw (e.g. pywebview private mode on GTK);
+// preferences then simply are not remembered instead of breaking the whole UI.
+function storageGet(key) {
+  try { return window.localStorage.getItem(key); } catch (e) { return null; }
+}
+
+function storageSet(key, value) {
+  try { window.localStorage.setItem(key, value); } catch (e) { /* not persisted */ }
+}
+
+let currentLang = storageGet("lang") || "en";
 if (!TRANSLATIONS[currentLang]) currentLang = "en";
 
 function t(key, vars) {
@@ -274,7 +284,7 @@ function t(key, vars) {
 function setLang(lang) {
   if (!TRANSLATIONS[lang]) return;
   currentLang = lang;
-  localStorage.setItem("lang", lang);
+  storageSet("lang", lang);
   document.documentElement.lang = lang;
   applyTranslations();
 }

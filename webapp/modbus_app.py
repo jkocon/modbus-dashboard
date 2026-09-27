@@ -44,7 +44,9 @@ def main() -> None:
     webview.create_window(APP_TITLE, url, width=1000, height=800, min_size=(760, 600))
 
     try:
-        webview.start()
+        # private_mode=True (the default) disables localStorage on GTK WebKit;
+        # the UI keeps its language/theme there.
+        webview.start(private_mode=False)
     finally:
         server.shutdown()
         server.server_close()
