@@ -16,20 +16,20 @@ unless the operator explicitly opts in.
 
 | Risk | Control | Where |
 |---|---|---|
-| Exposure to the network | Server binds to `127.0.0.1` by default; the desktop app picks a random loopback port per launch. LAN exposure requires an explicit `--address 0.0.0.0`. | `modbus_dashboard.py` `main()`, `modbus_app.py` |
-| **DNS rebinding** (a malicious site's domain resolving to 127.0.0.1) | Every request to a loopback-bound server must carry a `Host` header naming `127.0.0.1`, `localhost` or `::1`; anything else is `403`. | `Handler._request_allowed` |
-| **CSRF** from another origin | If the browser sends `Origin`, it must equal `http://<Host>` exactly (`Origin: null` is rejected). Additionally `POST` bodies must be `application/json`, so a cross-site *simple request* (`text/plain`) is refused with `415` before reaching any handler — and a JSON request forces a CORS preflight the server never approves. | `_request_allowed`, `_read_json` |
-| Memory exhaustion via large bodies | `Content-Length` capped at 1 MiB (`413`). | `_read_json` |
-| Thread exhaustion via job spam | At most 4 concurrent scan jobs and 4 discovery jobs (`429`). | `_start_job` |
-| Path traversal in static files | Resolved path must stay inside the bundled `static/` directory (`403`). | `_serve_static` |
+| Exposure to the network | Server binds to `127.0.0.1` by default; the desktop app picks a random loopback port per launch. LAN exposure requires an explicit `--serve --address 0.0.0.0`. | `main.rs` |
+| **DNS rebinding** (a malicious site's domain resolving to 127.0.0.1) | Every request to a loopback-bound server must carry a `Host` header naming `127.0.0.1`, `localhost` or `::1`; anything else is `403`. | `server::allowed` |
+| **CSRF** from another origin | If the browser sends `Origin`, it must equal `http://<Host>` exactly (`Origin: null` is rejected). Additionally `POST` bodies must be `application/json`, so a cross-site *simple request* (`text/plain`) is refused with `415` before reaching any handler — and a JSON request forces a CORS preflight the server never approves. | `allowed`, `read_json` |
+| Memory exhaustion via large bodies | `Content-Length` capped at 1 MiB (`413`). | `read_json` |
+| Thread exhaustion via job spam | At most 4 concurrent scan jobs and 4 discovery jobs (`429`). | `jobs::Store::start` |
+| Path traversal in static files | Only the UI files compiled into the binary are served, by exact path; anything else is `404`. | `serve_static` |
 | XSS via device data | All device-supplied strings (responses, discovered names) are inserted with `textContent`, never `innerHTML`. | `static/app.js` |
-| Malformed input | JSON is parsed defensively (`400`), numeric fields are cast, subnet is parsed with `ipaddress`, serial parameters are validated against allow-lists before the port is opened. | throughout |
+| Malformed input | JSON is parsed defensively (`400`), numeric fields are range-checked (device addresses 1–247, never truncated to a byte), the subnet is parsed as IPv4 CIDR, serial parameters are validated against allow-lists before the port is opened. | throughout |
 
-Tests for these controls live in `webapp/tests/test_api_security.py`.
+Tests for these controls live in `src/server.rs` (`cargo test`).
 
 ## Residual risks — read before exposing the server
 
-- **No authentication.** `--address 0.0.0.0` (or binding to any non-loopback address)
+- **No authentication.** `--serve --address 0.0.0.0` (or binding to any non-loopback address)
   disables the `Host` check by design. Everyone on that network can then control your
   Modbus devices and run port sweeps that originate from your machine. Use it only on a
   trusted network, or put it behind a reverse proxy that adds authentication.

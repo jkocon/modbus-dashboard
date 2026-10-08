@@ -3,8 +3,8 @@
 Wieloplatformowe narzędzie desktopowe do wyszukiwania, odczytu i konfiguracji urządzeń
 **Modbus RTU** po **RS485 (port szeregowy)** albo **przez sieć** (konwertery
 RS485↔Ethernet/WiFi lub prawdziwy Modbus TCP). Działa jako natywne okno (jak ESPHome Device
-Builder) na Windows, Linux i macOS i daje się zbudować do jednego pliku wykonywalnego, który
-nie wymaga Pythona na docelowym komputerze.
+Builder) na Windows, Linux i macOS jako jeden plik wykonywalny napisany w Rust (wersja 2.0;
+wcześniejsze wersje były w Pythonie).
 
 Zestaw samodzielnych skryptów **PowerShell** (Windows) daje te same operacje z linii poleceń.
 
@@ -25,10 +25,11 @@ Zestaw samodzielnych skryptów **PowerShell** (Windows) daje te same operacje z 
 
 Wspólne dla wszystkich zakładek:
 
-- **Port szeregowy** (COM/RS485): port, baudrate, bity danych 5–8, parzystość, bity stopu 1/1.5/2, kontrola przepływu.
+- **Port szeregowy** (COM/RS485): port, baudrate, bity danych 5–8, parzystość None/Even/Odd, bity stopu 1/2, kontrola przepływu None/RTS-CTS/XON-XOFF.
 - **Sieć**: przezroczyste konwertery RTU-over-TCP (Elfin EW11, USR-TCP232, Waveshare RS485↔ETH…)
   **albo** natywny Modbus TCP (nagłówek MBAP, bez CRC) — jeden checkbox przełącza ramkowanie.
-- Domyślnie angielski, dostępny polski; jasny/ciemny motyw z ręcznym przełącznikiem.
+- Domyślnie angielski, dostępny polski; jasny/ciemny motyw z ręcznym przełącznikiem. Wybór
+  języka i motywu jest zapamiętywany w `~/.config/modbus-dashboard/prefs.json`.
 - Czytelne, konkretne błędy — np. gdy sterownik adaptera USB-RS485 odrzuca niewspieraną
   kombinację bitów danych/stopu, dostajesz dokładnie tę informację, a nie `The parameter is incorrect`.
 
@@ -36,46 +37,41 @@ Wspólne dla wszystkich zakładek:
 
 ## Szybki start
 
-### Opcja A — gotowy plik wykonywalny (bez Pythona)
+### Opcja A — gotowy plik wykonywalny
 
-Pobierz `Modbus Dashboard.exe` (Windows) ze strony Releases i uruchom. Otwiera własne okno;
-nic się nie instaluje i nic nie nasłuchuje poza `127.0.0.1`.
-
-Binarki macOS/Linux trzeba obecnie zbudować na docelowym systemie — patrz *Budowanie*.
+Uruchom pojedynczy plik `modbus-dashboard` (`modbus-dashboard.exe` na Windows). Otwiera własne
+okno; nic się nie instaluje, a serwer w środku nasłuchuje tylko na losowym porcie `127.0.0.1`.
+Pliki interfejsu są wbudowane w binarkę.
 
 ### Opcja B — ze źródeł
 
-Wymaga **Pythona 3.9+**.
+Wymaga **Rust 1.85+** (`cargo`).
 
 ```bash
-cd webapp
-pip install -r requirements.txt
-python modbus_app.py            # natywne okno (zalecane)
-# albo
-python modbus_dashboard.py      # serwer HTTP + przeglądarka, http://127.0.0.1:6070/
+cargo run --release                 # natywne okno (zalecane)
+cargo run --release -- --serve      # serwer HTTP + przeglądarka, http://127.0.0.1:6070/
 ```
 
-Na Linux/macOS użyj `python3` / `pip3`, jeśli `python` nie jest Pythonem 3.
+`--serve` przyjmuje też `--address 0.0.0.0` (LAN, patrz *Model bezpieczeństwa*), `--port N`
+i `--no-browser`.
 
-Uwagi do natywnego okna (`pywebview`):
+Uwagi do natywnego okna (`wry`):
 
-- **Windows** — wbudowany WebView2 (jest razem z Edge na Windows 10/11); `pythonnet` instaluje pip.
-- **macOS** — WKWebView; `pyobjc` instaluje pip.
-- **Linux** — potrzebny systemowy GTK WebKit, którego pip nie zainstaluje:
-  `sudo apt install python3-gi gir1.2-webkit2-4.1 python3-gi-cairo` (Debian/Ubuntu).
-  Dodaj się też do grupy portów szeregowych: `sudo usermod -a -G dialout $USER` i zaloguj ponownie.
+- **Windows** — wbudowany WebView2 (jest razem z Edge na Windows 10/11).
+- **macOS** — WKWebView.
+- **Linux** — do budowania i działania potrzebne WebKitGTK i GTK 3: `webkit2gtk-4.1 gtk3`
+  (Arch), `libwebkit2gtk-4.1-dev libgtk-3-dev` (Debian/Ubuntu). Dodaj się też do grupy portów
+  szeregowych (`uucp` na Arch, `dialout` na Debian/Ubuntu) i zaloguj ponownie.
 
 ### Budowanie samodzielnego pliku wykonywalnego
 
 ```bash
-cd webapp
-pip install -r requirements.txt -r requirements-build.txt
-python build.py
+cargo build --release
 ```
 
-Wynik trafia do `webapp/dist/` (`Modbus Dashboard.exe` / `.app` / binarka). PyInstaller nie
-buduje krzyżowo — `build.py` uruchamiasz **na każdym docelowym systemie osobno**. Plik
-`icon.ico` / `icon.icns` / `icon.png` obok `build.py` nada binarce własną ikonę.
+Wynik: `target/release/modbus-dashboard` (`.exe` na Windows). Budujesz **na każdym docelowym
+systemie osobno**; wydanie na Windows nie otwiera okna konsoli. Na CachyOS `install.sh` buduje
+binarkę i instaluje ją w `/opt/modbus-dashboard` ze skrótem w menu.
 
 ---
 
@@ -94,7 +90,12 @@ urządzenia mówi inaczej.
 Nie każdy adapter USB-RS485 wspiera każdą kombinację. Wiele adapterów klasy CH340 obsługuje
 tylko 7–8 bitów danych i 1/2 bity stopu; 5/6 bitów albo 1.5 bitu stopu sterownik odrzuca na
 poziomie systemu. Aplikacja rozpoznaje ten konkretny błąd (`ERROR_INVALID_PARAMETER`) i
-podpowiada powrót do 8N1 zamiast pokazywać surowy wyjątek.
+podpowiada powrót do 8N1 zamiast pokazywać surowy wyjątek. Parzystości Mark/Space, 1,5 bitu
+stopu i kontroli DSR/DTR nie ma (biblioteka portów ich nie obsługuje, Modbus RTU ich nie używa).
+
+Odpowiedź jest czytana do końca ramki (długość wynika z kodu funkcji albo nagłówka MBAP) albo
+do ciszy na linii przez 3,5 znaku (co najmniej 20 ms, z zapasem na opóźnienie adapterów USB),
+więc działają też wolne prędkości, np. 1200.
 
 **Sieć.** Podaj IP konwertera i port TCP. Port zależy od konfiguracji konwertera — 502, 8899,
 4196 i 23 są typowe. Są dwa ramkowania:
@@ -179,23 +180,23 @@ rozwijanym interfejsem jest dashboard.
 ## Architektura
 
 ```
-webapp/
-  modbus_app.py           punkt wejścia desktop: startuje serwer na losowym porcie loopback
-                          i pokazuje go w natywnym WebView (pywebview)
-  modbus_dashboard.py     serwer HTTP + API JSON (stdlib http.server); także CLI do trybu
-                          headless/LAN
-  modbus_core.py          protokół: CRC16, ramki RTU i MBAP, transport serial/TCP, dekodowanie
-                          R4DCB08, Write Single Register z weryfikacją echa
-  network_discovery.py    broadcast UDP HF/Elfin + równoległy skan portów TCP
-  build.py                build PyInstaller do jednego pliku
-  static/                 interfejs jednostronicowy (czysty HTML/CSS/JS, bez bundlera)
-    i18n.js               słowniki EN/PL; domyślnie angielski
-  tests/                  testy jednostkowe (protokół) + integracyjne (bezpieczeństwo API)
-ModbusCommon.ps1 …        port tej samej warstwy protokołu na PowerShell + skrypty CLI
+src/
+  main.rs        punkt wejścia: natywne okno (wry/tao) z serwerem na losowym porcie loopback
+                 albo --serve do trybu headless/LAN z przeglądarką
+  server.rs      serwer HTTP + API JSON (tiny_http), kontrola Host/Origin/Content-Type;
+                 interfejs jest wkompilowany w binarkę
+  core.rs        protokół: CRC16, ramki RTU i MBAP, wykrywanie długości ramki, walidacja
+                 danych, dekodowanie R4DCB08, cewki, Write Single Register z weryfikacją echa
+  transport.rs   transport szeregowy (crate serialport) i TCP
+  discovery.rs   broadcast UDP HF/Elfin + równoległy skan portów TCP
+  jobs.rs        zadania w tle (skan, wykrywanie), które UI odpytuje
+static/          interfejs jednostronicowy (czysty HTML/CSS/JS, bez bundlera)
+  i18n.js        słowniki EN/PL; domyślnie angielski
+ModbusCommon.ps1 …  port tej samej warstwy protokołu na PowerShell + skrypty CLI
 ```
 
-Bez frameworka webowego i bez bundlera JS: jedyne zewnętrzne zależności to `pyserial`
-(porty szeregowe) i `pywebview` (natywne okno). Frontend rozmawia z backendem przez małe
+Bez frameworka webowego i bez bundlera JS: zależności to `serialport` (porty szeregowe),
+`tiny_http` (serwer), `serde_json`, `clap` i `wry`/`tao` (natywne okno). Frontend rozmawia z backendem przez małe
 API JSON; długie operacje (skan, wykrywanie) działają jako zadania w tle, które UI odpytuje.
 Pełna referencja API: sekcja *JSON API* w [README.md](README.md#json-api).
 
@@ -206,9 +207,9 @@ Pełna referencja API: sekcja *JSON API* w [README.md](README.md#json-api).
 To narzędzie **jednego użytkownika, lokalne**. Serwer domyślnie nasłuchuje na `127.0.0.1`,
 aplikacja desktopowa używa losowego portu. API sprawdza nagłówki `Host` i `Origin` (blokuje
 DNS rebinding i żądania cross-site), wymaga `application/json` na `POST`, ogranicza rozmiar
-żądania i liczbę równoległych zadań, a pliki statyczne serwuje tylko z własnego katalogu.
+żądania i liczbę równoległych zadań, a serwuje tylko pliki interfejsu wbudowane w binarkę.
 
-**Nie ma uwierzytelniania.** Po uruchomieniu `modbus_dashboard.py --address 0.0.0.0` każdy,
+**Nie ma uwierzytelniania.** Po uruchomieniu `modbus-dashboard --serve --address 0.0.0.0` każdy,
 kto dosięgnie tego portu, może przekonfigurować Twoje urządzenia Modbus i uruchamiać skany
 portów z Twojej maszyny. Rób to tylko w zaufanej sieci. Szczegóły i zgłaszanie:
 [SECURITY.md](SECURITY.md).
@@ -218,12 +219,13 @@ portów z Twojej maszyny. Rób to tylko w zaufanej sieci. Szczegóły i zgłasza
 ## Testy
 
 ```bash
-cd webapp
-python -m unittest discover -s tests -v
+cargo test
 ```
 
-Testy protokołu używają gotowych ramek (bez sprzętu). Testy API startują prawdziwy serwer
-na porcie efemerycznym i sprawdzają zabezpieczenia.
+Testy protokołu używają gotowych ramek (bez sprzętu); para pseudoterminali symuluje urządzenie
+na 1200 baud. Testy API startują prawdziwy serwer na porcie efemerycznym i sprawdzają
+zabezpieczenia oraz walidację danych (adresy 1–247, `oldAddress` także 0 = broadcast, nigdy
+obcinane do bajtu).
 
 ---
 

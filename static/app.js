@@ -652,6 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("themeToggle").addEventListener("click", toggleTheme);
 
   $("langSelect").value = currentLang;
+  document.documentElement.lang = currentLang;
   applyTranslations();
   $("langSelect").addEventListener("change", (e) => setLang(e.target.value));
 

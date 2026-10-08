@@ -3,34 +3,33 @@
 ## Development setup
 
 ```bash
-cd webapp
-python -m venv .venv
-. .venv/bin/activate            # Windows: .venv\Scripts\activate
-pip install -r requirements.txt -r requirements-build.txt
-python modbus_dashboard.py      # browser mode is quickest for UI work
+cargo run -- --serve            # browser mode is quickest for UI work
+cargo run                       # native window
 ```
+
+The UI files in `static/` are compiled into the binary, so rebuild after editing them.
 
 Run the tests before opening a pull request:
 
 ```bash
-python -m unittest discover -s tests -v
+cargo test
+cargo clippy --all-targets
 ```
 
 ## Ground rules
 
-- **Keep it dependency-light.** The backend is Python stdlib + `pyserial` (+ `pywebview`
-  for the window). The frontend is plain HTML/CSS/JS with no build step. Please don't add a
+- **Keep it dependency-light.** The backend is `serialport`, `tiny_http`, `serde_json` and
+  `clap` (+ `wry`/`tao` for the window). The frontend is plain HTML/CSS/JS with no build step. Please don't add a
   framework or bundler for a small feature.
 - **Every user-facing string goes through `static/i18n.js`** with both `en` and `pl`
   entries. English is the default. Backend error messages are English only.
-- **Protocol changes need a test** in `tests/test_core.py` using canned frames; API/security
-  changes need one in `tests/test_api_security.py`.
+- **Protocol changes need a test** in `src/core.rs` using canned frames; API/security
+  changes need one in `src/server.rs`.
 - **New discovery protocols** must be verified against a real device or a public,
   independently confirmed specification — include the source in the PR. Don't guess bytes.
-- The PowerShell scripts mirror `modbus_core.py`; if you change framing or serial
+- The PowerShell scripts mirror `src/core.rs`; if you change framing or serial
   parameters in one, change the other or say why not.
-- Don't commit `webapp/dist/`, `webapp/build/` or `*.spec` (see `.gitignore`); binaries go
-  to Releases.
+- Don't commit `target/` (see `.gitignore`); binaries go to Releases.
 
 ## Reporting hardware findings
 

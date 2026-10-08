@@ -54,17 +54,17 @@
     <label><span data-i18n="dataBitsLabel">Data bits:</span> <select id="dataBits"><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label>
     <label><span data-i18n="parityLabel">Parity:</span>
       <select id="parity">
-        <option selected>None</option><option>Even</option><option>Odd</option><option>Mark</option><option>Space</option>
+        <option selected>None</option><option>Even</option><option>Odd</option>
       </select>
     </label>
     <label><span data-i18n="stopBitsLabel">Stop bits:</span>
       <select id="stopBits">
-        <option value="One" selected>1</option><option value="OnePointFive">1.5</option><option value="Two">2</option>
+        <option value="One" selected>1</option><option value="Two">2</option>
       </select>
     </label>
     <label><span data-i18n="flowControlLabel">Flow control:</span>
       <select id="flowControl">
-        <option selected>None</option><option>RtsCts</option><option>DsrDtr</option><option>XonXoff</option>
+        <option selected>None</option><option>RtsCts</option><option>XonXoff</option>
       </select>
     </label>
   </div>
@@ -251,6 +251,7 @@
   <pre id="baudLog" class="log"></pre>
 </section>
 
+<script src="prefs.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>

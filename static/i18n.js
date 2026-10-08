@@ -258,14 +258,24 @@ const TRANSLATIONS = {
   },
 };
 
-// localStorage can be missing or throw (e.g. pywebview private mode on GTK);
-// preferences then simply are not remembered instead of breaking the whole UI.
+// Preferences are saved by the server (prefs.js, loaded first, carries them): the desktop
+// window gets a new random port on every launch, and localStorage is per origin including the
+// port, so on its own it forgot the language each time. localStorage is only a fallback; it can
+// be missing or throw, and then preferences are simply not remembered.
 function storageGet(key) {
+  const saved = window.SAVED_PREFS && window.SAVED_PREFS[key];
+  if (saved) return saved;
   try { return window.localStorage.getItem(key); } catch (e) { return null; }
 }
 
 function storageSet(key, value) {
+  if (window.SAVED_PREFS) window.SAVED_PREFS[key] = value;
   try { window.localStorage.setItem(key, value); } catch (e) { /* not persisted */ }
+  fetch("/api/prefs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value }),
+  }).catch(() => { /* not persisted */ });
 }
 
 let currentLang = storageGet("lang") || "en";

@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# Instaluje/aktualizuje Modbus Dashboard w /opt/modbus-dashboard (venv + skrót). Uruchom jako root.
-# Na X13 robi to automatycznie target/apply.sh po każdej zmianie w katalogu modbus-dashboard/.
-# Na X16 aplikacja działa prosto z repo (webapp/.venv), tego skryptu tam nie trzeba.
+# Instaluje/aktualizuje Modbus Dashboard w /opt/modbus-dashboard (binarka Rust + skrót). Uruchom jako root.
+# Na X13 robi to automatycznie target/apply.sh po każdej zmianie w modbus-dashboard/ albo tray-common/.
+# Od 2.0 jedna binarka z wbudowanym interfejsem (wcześniej Python + venv z pywebview).
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
 DEST=/opt/modbus-dashboard
 [[ $EUID -eq 0 ]] || { echo "Uruchom przez sudo"; exit 1; }
 
-# pywebview na Linuksie używa backendu GTK (WebKitGTK).
-pacman -S --needed --asdeps --noconfirm python-gobject webkit2gtk-4.1
+# Okno to WebKitGTK (wry/tao) - potrzebne do budowania i działania.
+pacman -S --needed --asdeps --noconfirm webkit2gtk-4.1 gtk3
 
-mkdir -p "$DEST"
-rsync -a --delete --exclude .venv --exclude __pycache__ --exclude dist --exclude build \
-    --exclude tests "$SRC/webapp/" "$DEST/"
-[[ -x $DEST/.venv/bin/python3 ]] || python3 -m venv --system-site-packages "$DEST/.venv"
-# Tylko to, czego nie ma w pakietach systemowych (requirements.txt zawiera też pyinstaller).
-"$DEST/.venv/bin/pip" install --quiet --upgrade pywebview pyserial
+# Budowanie jako zwykły użytkownik, tym samym skryptem co traye.
+BIN=$("$SRC/../tray-common/build.sh" "$SRC")
 
+rm -rf "$DEST/.venv" "$DEST/static" "$DEST"/*.py "$DEST/__pycache__"  # wersja w Pythonie
+install -Dm755 "$BIN" "$DEST/modbus-dashboard"
 install -Dm644 "$SRC/modbus-dashboard.desktop" /usr/local/share/applications/modbus-dashboard.desktop
 install -Dm644 "$SRC/modbus-dashboard.svg" /usr/local/share/icons/hicolor/scalable/apps/modbus-dashboard.svg
 gtk-update-icon-cache -qtf /usr/local/share/icons/hicolor 2>/dev/null || true

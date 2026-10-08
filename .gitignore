@@ -1,13 +1,5 @@
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-
-# PyInstaller build output (binaries go to GitHub Releases, not the repo)
-webapp/build/
-webapp/dist/
-webapp/*.spec
+# Rust build output (binaries go to GitHub Releases, not the repo)
+/target/
 
 # Editors / OS
 .vscode/
