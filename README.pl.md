@@ -37,11 +37,16 @@ Wspólne dla wszystkich zakładek:
 
 ## Szybki start
 
-### Opcja A — gotowy plik wykonywalny
+### Opcja A — gotowy plik wykonywalny (Linux x86_64)
 
-Uruchom pojedynczy plik `modbus-dashboard` (`modbus-dashboard.exe` na Windows). Otwiera własne
-okno; nic się nie instaluje, a serwer w środku nasłuchuje tylko na losowym porcie `127.0.0.1`.
-Pliki interfejsu są wbudowane w binarkę.
+Pobierz `modbus-dashboard-<wersja>-linux-x86_64.tar.gz` ze strony
+[Releases](https://github.com/jkocon/modbus-dashboard/releases), rozpakuj i uruchom
+`./modbus-dashboard`. Otwiera własne okno; nic się nie instaluje, a serwer w środku nasłuchuje
+tylko na losowym porcie `127.0.0.1`. Pliki interfejsu są wbudowane w binarkę. Wymaga glibc 2.39+
+(Arch/CachyOS, Ubuntu 24.04+, Debian 13, Fedora 40+) oraz WebKitGTK 4.1 i GTK 3.
+
+Gotowych binarek na Windows ani macOS nie ma – zbuduj ją sam, to kilka minut (patrz
+*Budowanie na Windows* niżej).
 
 ### Opcja B — ze źródeł
 
@@ -70,8 +75,25 @@ cargo build --release
 ```
 
 Wynik: `target/release/modbus-dashboard` (`.exe` na Windows). Budujesz **na każdym docelowym
-systemie osobno**; wydanie na Windows nie otwiera okna konsoli. Na CachyOS `install.sh` buduje
-binarkę i instaluje ją w `/opt/modbus-dashboard` ze skrótem w menu.
+systemie osobno**. Na CachyOS `install.sh` buduje binarkę i instaluje ją w `/opt/modbus-dashboard`
+ze skrótem w menu.
+
+### Budowanie na Windows
+
+1. Zainstaluj Visual Studio **Build Tools** z pakietem *Desktop development with C++* (linker MSVC
+   i Windows SDK).
+2. Zainstaluj Rust przez [rustup](https://rustup.rs) (domyślny toolchain `x86_64-pc-windows-msvc`).
+3. W katalogu repozytorium uruchom:
+
+   ```powershell
+   cargo build --release
+   ```
+
+Wynikiem jest jeden plik `target\release\modbus-dashboard.exe` – skopiuj go gdziekolwiek
+i uruchom. Korzysta z WebView2, który jest w Windows 10/11, nie potrzebuje innych plików,
+a wersja release nie otwiera okna konsoli (`--serve` dalej uruchamia tryb przeglądarki, tylko nic nie wypisuje). Porty
+szeregowe widać jako `COM3`, `COM4`, … Wersja na Windows nie jest testowana przez autora przy
+każdym wydaniu.
 
 ---
 

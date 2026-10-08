@@ -37,11 +37,16 @@ Common to all tabs:
 
 ## Quick start
 
-### Option A — prebuilt binary
+### Option A — prebuilt binary (Linux x86_64)
 
-Run the single `modbus-dashboard` executable (`modbus-dashboard.exe` on Windows). It opens its
-own window; nothing is installed, and the server inside listens only on a random `127.0.0.1`
-port. The UI files are built into the binary.
+Download `modbus-dashboard-<version>-linux-x86_64.tar.gz` from the
+[Releases](https://github.com/jkocon/modbus-dashboard/releases) page, unpack it and run
+`./modbus-dashboard`. It opens its own window; nothing is installed, and the server inside
+listens only on a random `127.0.0.1` port. The UI files are built into the binary. It needs
+glibc 2.39+ (Arch/CachyOS, Ubuntu 24.04+, Debian 13, Fedora 40+) and WebKitGTK 4.1 + GTK 3.
+
+There are no prebuilt Windows or macOS binaries – build one yourself, it takes a few minutes
+(see *Building on Windows* below).
 
 ### Option B — from source
 
@@ -69,9 +74,24 @@ Platform notes for the native window (`wry`):
 cargo build --release
 ```
 
-Output: `target/release/modbus-dashboard` (`.exe` on Windows). Build it **on each target OS**;
-release builds on Windows have no console window. On CachyOS `install.sh` builds it and
-installs it to `/opt/modbus-dashboard` with a menu entry.
+Output: `target/release/modbus-dashboard` (`.exe` on Windows). Build it **on each target OS**.
+On CachyOS `install.sh` builds it and installs it to `/opt/modbus-dashboard` with a menu entry.
+
+### Building on Windows
+
+1. Install the Visual Studio **Build Tools** with the *Desktop development with C++* workload
+   (the MSVC linker and Windows SDK).
+2. Install Rust with [rustup](https://rustup.rs) (default `x86_64-pc-windows-msvc` toolchain).
+3. In the repository folder run:
+
+   ```powershell
+   cargo build --release
+   ```
+
+The result is a single file, `target\release\modbus-dashboard.exe`: copy it anywhere and run it.
+It uses the WebView2 runtime that ships with Windows 10/11, needs no other files, and the release
+build opens no console window (`--serve` still starts the browser mode, but prints nothing). Serial ports
+appear as `COM3`, `COM4`, … The Windows build is not tested by the author on every release.
 
 ---
 
