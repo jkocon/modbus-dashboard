@@ -74,7 +74,7 @@ Uwagi do natywnego okna (`wry`):
 cargo build --release
 ```
 
-Wynik: `target/release/modbus-dashboard` (`.exe` na Windows). Budujesz **na każdym docelowym
+Wynik: `target/release/modbus-dashboard`. Budujesz **na każdym docelowym
 systemie osobno**. Na CachyOS `install.sh` buduje binarkę i instaluje ją w `/opt/modbus-dashboard`
 ze skrótem w menu.
 
@@ -89,7 +89,7 @@ ze skrótem w menu.
    cargo build --release
    ```
 
-Wynikiem jest jeden plik `target\release\modbus-dashboard.exe` – skopiuj go gdziekolwiek
+Wynikiem jest jeden plik programu w `target\release\` – skopiuj go gdziekolwiek
 i uruchom. Korzysta z WebView2, który jest w Windows 10/11, nie potrzebuje innych plików,
 a wersja release nie otwiera okna konsoli (`--serve` dalej uruchamia tryb przeglądarki, tylko nic nie wypisuje). Porty
 szeregowe widać jako `COM3`, `COM4`, … Wersja na Windows nie jest testowana przez autora przy

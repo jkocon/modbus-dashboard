@@ -39,8 +39,8 @@ Tests for these controls live in `src/server.rs` (`cargo test`).
   rate takes effect immediately on the device; with duplicated addresses it affects every
   device that shares the address.
 - **Serial port access** is whatever the OS grants the user running the app.
-- The prebuilt `.exe` is not code-signed. Verify it came from this repository's Releases
-  page, or build it yourself with `build.py`.
+- Prebuilt binaries are not code-signed. Verify the download against the `.sha256` file on
+  this repository's Releases page, or build it yourself with `cargo build --release`.
 
 ## Reporting a vulnerability
 

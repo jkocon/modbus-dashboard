@@ -74,7 +74,7 @@ Platform notes for the native window (`wry`):
 cargo build --release
 ```
 
-Output: `target/release/modbus-dashboard` (`.exe` on Windows). Build it **on each target OS**.
+Output: `target/release/modbus-dashboard`. Build it **on each target OS**.
 On CachyOS `install.sh` builds it and installs it to `/opt/modbus-dashboard` with a menu entry.
 
 ### Building on Windows
@@ -88,7 +88,7 @@ On CachyOS `install.sh` builds it and installs it to `/opt/modbus-dashboard` wit
    cargo build --release
    ```
 
-The result is a single file, `target\release\modbus-dashboard.exe`: copy it anywhere and run it.
+The result is a single program file in `target\release\`: copy it anywhere and run it.
 It uses the WebView2 runtime that ships with Windows 10/11, needs no other files, and the release
 build opens no console window (`--serve` still starts the browser mode, but prints nothing). Serial ports
 appear as `COM3`, `COM4`, … The Windows build is not tested by the author on every release.
