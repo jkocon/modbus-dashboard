@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Instaluje/aktualizuje Modbus Dashboard w /opt/modbus-dashboard (binarka Rust + skrót). Uruchom jako root.
-# Na X13 robi to automatycznie target/apply.sh po każdej zmianie w modbus-dashboard/ albo tray-common/.
+# Na X13 robi to automatycznie target/apply.sh z cachyos_sync po każdym nowym commicie w tym repo.
 # Od 2.0 jedna binarka z wbudowanym interfejsem (wcześniej Python + venv z pywebview).
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
@@ -10,8 +10,8 @@ DEST=/opt/modbus-dashboard
 # Okno to WebKitGTK (wry/tao) - potrzebne do budowania i działania.
 pacman -S --needed --asdeps --noconfirm webkit2gtk-4.1 gtk3
 
-# Budowanie jako zwykły użytkownik, tym samym skryptem co traye.
-BIN=$("$SRC/../tray-common/build.sh" "$SRC")
+# Budowanie jako zwykły użytkownik (build.sh).
+BIN=$("$SRC/build.sh" "$SRC")
 
 rm -rf "$DEST/.venv" "$DEST/static" "$DEST"/*.py "$DEST/__pycache__"  # wersja w Pythonie
 install -Dm755 "$BIN" "$DEST/modbus-dashboard"
